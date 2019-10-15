@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-#import "AppCenterDelegateObjC.h"
-#import "Constants.h"
 
 #if GCC_PREPROCESSOR_MACRO_PUPPET
 #import "AppCenter.h"
@@ -18,15 +16,32 @@
 #import "MSAppCenterInternal.h"
 #import "MSAuthPrivate.h"
 
+#elif GCC_PREPROCESSOR_MACRO_SASQUATCH_OBJC
+#import <AppCenter/AppCenter.h>
+#import <AppCenterAnalytics/AppCenterAnalytics.h>
+#import <AppCenterAuth/AppCenterAuth.h>
+#import <AppCenterCrashes/AppCenterCrashes.h>
+#import <AppCenterData/AppCenterData.h>
+#import <AppCenterDistribute/AppCenterDistribute.h>
+#import <AppCenterPush/AppCenterPush.h>
 #else
 @import AppCenter;
 @import AppCenterAnalytics;
+@import AppCenterAuth;
 @import AppCenterCrashes;
 @import AppCenterData;
 @import AppCenterDistribute;
-@import AppCenterAuth;
 @import AppCenterPush;
 #endif
+
+// We need to import all frameworks that used in swift header
+// to avoid missing declarations with modules disabled.
+#import <WebKit/WebKit.h>
+#import <FirebaseAuthUI/FUIAuth.h>
+
+#import "Sasquatch-Swift.h"
+#import "AppCenterDelegateObjC.h"
+#import "Constants.h"
 
 /**
  * AppCenterDelegate implementation in Objective C.
