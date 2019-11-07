@@ -72,7 +72,9 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
     NSNumber *flag = [MS_USER_DEFAULTS objectForKey:kMSSDKHasLaunchedWithDistribute];
     if (!flag) {
       MSLogInfo([MSDistribute logTag], @"Delete update token if exists.");
+      MSLogInfo([MSDistribute logTag], @"[ActivationDebug] Will delete update because of first install.");
       [MSKeychainUtil deleteStringForKey:kMSUpdateTokenKey];
+      MSLogInfo([MSDistribute logTag], @"[ActivationDebug] Did delete update because of first install.");
       [MS_USER_DEFAULTS setObject:@(1) forKey:kMSSDKHasLaunchedWithDistribute];
     }
 
@@ -239,7 +241,9 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
   NSString *releaseHash = MSPackageHash();
   if (releaseHash) {
     [self changeDistributionGroupIdAfterAppUpdateIfNeeded:releaseHash];
+    MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will get update token because we start update.");
     NSString *updateToken = [MSKeychainUtil stringForKey:kMSUpdateTokenKey];
+    MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did get %@ update token because we start update.", ([updateToken length] > 0?@"valid":@"invalid"));
     NSString *distributionGroupId = [MS_USER_DEFAULTS objectForKey:kMSDistributionGroupIdKey];
     if (updateToken || distributionGroupId) {
       [self checkLatestRelease:updateToken distributionGroupId:distributionGroupId releaseHash:releaseHash];
@@ -345,6 +349,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
         [queryStrings addEntriesFromDictionary:reportingParametersForUpdatedRelease];
       }
       queryStrings[kMSURLQueryReleaseHashKey] = releaseHash;
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will init ingestion with %@ token.", ([updateToken length] > 0?@"valid":@"invalid"));
       self.ingestion = [[MSDistributeIngestion alloc] initWithBaseUrl:self.apiUrl
                                                             appSecret:self.appSecret
                                                           updateToken:updateToken
@@ -438,7 +443,9 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
 
                     // If the response payload is MSErrorDetails, consider it as a recoverable error.
                     if (!details || ![kMSErrorCodeNoReleasesForUser isEqualToString:details.code]) {
+                      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will delete update token because of HTTP unrecoverable error.");
                       [MSKeychainUtil deleteStringForKey:kMSUpdateTokenKey];
+                      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did delete update token because of HTTP unrecoverable error.");
                       [MS_USER_DEFAULTS removeObjectForKey:kMSSDKHasLaunchedWithDistribute];
                       [MS_USER_DEFAULTS removeObjectForKey:kMSUpdateTokenRequestIdKey];
                       [MS_USER_DEFAULTS removeObjectForKey:kMSPostponedTimestampKey];
@@ -1085,9 +1092,13 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
       MSLogDebug([MSDistribute logTag], @"Update token has been successfully retrieved. Store the token to secure storage.");
 
       // Storing the update token to keychain since the update token is considered as a sensitive information.
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will store %@ update token from openURL qwery to keychain.", ([queryUpdateToken length] > 0?@"valid":@"invalid"));
       [MSKeychainUtil storeString:queryUpdateToken forKey:kMSUpdateTokenKey];
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did store update token from openURL qwery to keychain.");
     } else {
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will delete update token because none found from the openURL.");
       [MSKeychainUtil deleteStringForKey:kMSUpdateTokenKey];
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did delete update token because none found from the openURL.");
     }
     if (queryUpdateToken || queryDistributionGroupId) {
       [self checkLatestRelease:queryUpdateToken distributionGroupId:queryDistributionGroupId releaseHash:MSPackageHash()];

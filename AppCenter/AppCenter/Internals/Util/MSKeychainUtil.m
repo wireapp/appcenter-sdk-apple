@@ -5,6 +5,8 @@
 
 #import "MSKeychainUtilPrivate.h"
 #import "MSUtility.h"
+#import "MSLogger.h"
+#import "MSAppCenterInternal.h"
 
 @implementation MSKeychainUtil
 
@@ -39,6 +41,7 @@ static NSString *AppCenterKeychainServiceName(NSString *suffix) {
   if (string) {
     NSMutableDictionary *query = [MSKeychainUtil generateItem:key withServiceName:serviceName];
     OSStatus status = [self deleteSecItem:query];
+    MSLogVerbose([MSAppCenter logTag], @"[ActivationDebug] Keychain delete status: %d.",(int)status);
     if (status == noErr) {
       return string;
     }
@@ -56,6 +59,7 @@ static NSString *AppCenterKeychainServiceName(NSString *suffix) {
   query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
   CFTypeRef result = nil;
   OSStatus status = [self secItemCopyMatchingQuery:query result:&result];
+  MSLogVerbose([MSAppCenter logTag], @"[ActivationDebug] Keychain get status: %d.",(int)status);
   if (status == noErr) {
     return [[NSString alloc] initWithData:(__bridge_transfer NSData *)result encoding:NSUTF8StringEncoding];
   }
