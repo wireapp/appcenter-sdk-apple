@@ -24,10 +24,12 @@ static NSString *const kMSUserDefaultsTs = @"_ts";
 
 - (void)setObject:(id)o forKey:(NSString *)key {
   [[NSUserDefaults standardUserDefaults] setObject:o forKey:key];
+  MSLogInfo(@"ActivationDebug", @"setObject:forKey:, key='%@'", key);
 }
 
 - (void)removeObjectForKey:(NSString *)key {
   [[NSUserDefaults standardUserDefaults] removeObjectForKey:key];
+  MSLogInfo(@"ActivationDebug", @"removeObjectForKey:, key='%@'", key);
 }
 
 - (NSDictionary *)updateDictionary:(NSDictionary *)dict forKey:(NSString *)key expiration:(float)expiration {

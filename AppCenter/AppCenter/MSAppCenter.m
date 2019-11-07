@@ -241,8 +241,17 @@ static const long kMSMinUpperSizeLimitInBytes = 24 * 1024;
     _services = [NSMutableArray new];
     _enabledStateUpdating = NO;
     _serviceNotificationDelegates = [NSHashTable new];
+    [[NSUserDefaults standardUserDefaults] addObserver:self forKeyPath:@"MSSDKHasLaunchedWithDistribute" options:NSKeyValueObservingOptionNew context:nil];
   }
   return self;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+  (void)object;
+  (void)context;
+  (void)keyPath;
+  NSObject *newVal = [change objectForKey:@"new"];
+  MSLogInfo(@"ActivationDebug", @"Observing change on 'MSSDKHasLaunchedWithDistribute' in NSUserDefaults. Value is now %@.", newVal);
 }
 
 /**
