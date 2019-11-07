@@ -362,6 +362,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
                 if (!strongSelf) {
                   return;
                 }
+                NSInteger httpStatus = response.statusCode;
 
                 // Release ingestion instance.
                 strongSelf.ingestion = nil;
@@ -375,7 +376,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
                 NSError *jsonError = nil;
 
                 // Success.
-                if (response.statusCode == MSHTTPCodesNo200OK) {
+                if (httpStatus == MSHTTPCodesNo200OK) {
                   MSReleaseDetails *details = nil;
                   if (data) {
                     id dictionary = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:&jsonError];
@@ -409,7 +410,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
 
                 // Failure.
                 else {
-                  MSLogDebug([MSDistribute logTag], @"Failed to get an update response, status code: %tu", response.statusCode);
+                  MSLogDebug([MSDistribute logTag], @"Failed to get an update response, status code: %tu", httpStatus);
                   NSString *jsonString = nil;
                   id dictionary = nil;
 
@@ -433,7 +434,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
                   }
 
                   // Check the status code to clean up Distribute data for an unrecoverable error.
-                  if (![MSHttpUtil isRecoverableError:response.statusCode]) {
+                  if (![MSHttpUtil isRecoverableError:httpStatus]) {
 
                     // Deserialize payload to check if it contains error details.
                     MSErrorDetails *details = nil;
@@ -441,8 +442,8 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
                       details = [[MSErrorDetails alloc] initWithDictionary:dictionary];
                     }
 
-                    // If the response payload is MSErrorDetails, consider it as a recoverable error.
-                    if (!details || ![kMSErrorCodeNoReleasesForUser isEqualToString:details.code]) {
+                    // Delete update state only on authorization/authentication errors.
+                    if (httpStatus == MSHTTPCodesNo401Unauthorised || httpStatus == MSHTTPCodesNo403Forbidden) {
                       MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will delete update token because of HTTP unrecoverable error.");
                       [MSKeychainUtil deleteStringForKey:kMSUpdateTokenKey];
                       MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did delete update token because of HTTP unrecoverable error.");
