@@ -5,6 +5,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// TODO, temporary hack to get the keychain status, better use NSError pattern.
+extern OSStatus MSACLastKeyChainReadStatus;
+
 /**
  * Utility class for Keychain.
  */

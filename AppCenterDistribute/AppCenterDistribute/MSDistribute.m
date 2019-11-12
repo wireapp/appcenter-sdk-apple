@@ -19,6 +19,7 @@
 #import "MSGuidedAccessUtil.h"
 #import "MSKeychainUtil.h"
 #import "MSSessionContext.h"
+#import "MSUtility+Application.h"
 
 /**
  * Service storage key name.
@@ -239,10 +240,15 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
 - (void)startUpdate {
   NSString *releaseHash = MSPackageHash();
   if (releaseHash) {
-    [self changeDistributionGroupIdAfterAppUpdateIfNeeded:releaseHash];
     MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will get update token because we start update.");
     NSString *updateToken = [MSKeychainUtil stringForKey:kMSUpdateTokenKey];
+    if (!updateToken && MSACLastKeyChainReadStatus != noErr && MSACLastKeyChainReadStatus != errSecItemNotFound ){
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did NOT get the expected update token because of keychain error: %d. Skipped update check.", (int)MSACLastKeyChainReadStatus);
+      MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Current App state: %ld", (long)[MSUtility applicationState]);
+      return;
+    }
     MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did get %@ update token because we start update.", ([updateToken length] > 0?@"valid":@"invalid"));
+    [self changeDistributionGroupIdAfterAppUpdateIfNeeded:releaseHash];
     NSString *distributionGroupId = [MS_USER_DEFAULTS objectForKey:kMSDistributionGroupIdKey];
     if (updateToken || distributionGroupId) {
       [self checkLatestRelease:updateToken distributionGroupId:distributionGroupId releaseHash:releaseHash];

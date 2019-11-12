@@ -8,6 +8,8 @@
 #import "MSLogger.h"
 #import "MSAppCenterInternal.h"
 
+OSStatus MSACLastKeyChainReadStatus = noErr;
+
 @implementation MSKeychainUtil
 
 static NSString *AppCenterKeychainServiceName(NSString *suffix) {
@@ -59,6 +61,7 @@ static NSString *AppCenterKeychainServiceName(NSString *suffix) {
   query[(__bridge id)kSecMatchLimit] = (__bridge id)kSecMatchLimitOne;
   CFTypeRef result = nil;
   OSStatus status = [self secItemCopyMatchingQuery:query result:&result];
+  MSACLastKeyChainReadStatus = status;
   MSLogVerbose([MSAppCenter logTag], @"[ActivationDebug] Keychain get status: %d.",(int)status);
   if (status == noErr) {
     return [[NSString alloc] initWithData:(__bridge_transfer NSData *)result encoding:NSUTF8StringEncoding];
