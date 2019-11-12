@@ -75,7 +75,6 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
       MSLogInfo([MSDistribute logTag], @"[ActivationDebug] Will delete update because of first install.");
       [MSKeychainUtil deleteStringForKey:kMSUpdateTokenKey];
       MSLogInfo([MSDistribute logTag], @"[ActivationDebug] Did delete update because of first install.");
-      [MS_USER_DEFAULTS setObject:@(1) forKey:kMSSDKHasLaunchedWithDistribute];
     }
 
     // Proceed update whenever an application is restarted in users perspective.
@@ -1095,6 +1094,7 @@ static NSString *const kMSUpdateTokenURLInvalidErrorDescFormat = @"Invalid updat
       // Storing the update token to keychain since the update token is considered as a sensitive information.
       MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will store %@ update token from openURL qwery to keychain.", ([queryUpdateToken length] > 0?@"valid":@"invalid"));
       [MSKeychainUtil storeString:queryUpdateToken forKey:kMSUpdateTokenKey];
+      [MS_USER_DEFAULTS setObject:@(1) forKey:kMSSDKHasLaunchedWithDistribute];
       MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Did store update token from openURL qwery to keychain.");
     } else {
       MSLogVerbose([MSDistribute logTag], @"[ActivationDebug] Will delete update token because none found from the openURL.");
