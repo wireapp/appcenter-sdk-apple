@@ -1,10 +1,14 @@
 # App Center SDK for iOS, macOS and tvOS Change Log
 
-## Version 2.6.0 (Under development)
+## Version 2.5.2 (Under development)
 
-### App Center Data
+___
 
-* **[Breaking change]** Renamed delegate from `MSRemoteOperationDelegate` to `MSDataDelegate` and setter method from `MSData.setRemoteOperationDelegate` to `MSData.setDelegate`.
+## Version 2.5.1
+
+### App Center
+
+* **[Fix]** Fix warnings in Xcode 11 when SDK is installed via CocoaPods.
 
 ___
 
