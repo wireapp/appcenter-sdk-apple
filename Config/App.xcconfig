@@ -11,6 +11,10 @@ DEBUG_INFORMATION_FORMAT_Debug = dwarf
 DEBUG_INFORMATION_FORMAT_Release = dwarf-with-dsym
 DEBUG_INFORMATION_FORMAT = $(DEBUG_INFORMATION_FORMAT_$(CONFIGURATION))
 
+// App Center crash reporting does not completely support the symbolication of crashes from bitcode-enabled apps yet.
+// See https://docs.microsoft.com/en-us/appcenter/diagnostics/ios-symbolication#bitcode
+ENABLE_BITCODE = NO
+
 // :Mark: Architectures
 ONLY_ACTIVE_ARCH_Debug = YES
 ONLY_ACTIVE_ARCH_Release = NO
