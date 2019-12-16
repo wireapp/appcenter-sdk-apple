@@ -1,2 +1,1 @@
 PRODUCT_BUNDLE_IDENTIFIER = com.microsoft.appcenter.auth
-DEPLOYMENT_POSTPROCESSING = YES;
