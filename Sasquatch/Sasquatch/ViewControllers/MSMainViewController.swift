@@ -7,6 +7,9 @@ import UIKit
 let kMSDefaultDatabaseSize = 10 * 1024 * 1024
 let acProdLogUrl = "https://in.appcenter.ms"
 let ocProdLogUrl = "https://mobile.events.data.microsoft.com"
+let kMSARefreshTokenKey = "MSARefreshToken"
+let kMSAppCenterBundleIdentifier = "com.microsoft.appcenter"
+let kMSATokenKey = "MSAToken"
 
 class MSMainViewController: UITableViewController, AppCenterProtocol {
   
@@ -27,7 +30,6 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
   @IBOutlet weak var logUrl: UILabel!
   @IBOutlet weak var sdkVersion: UILabel!
   @IBOutlet weak var pushEnabledSwitch: UISwitch!
-  @IBOutlet weak var authSwitch: UISwitch!
   @IBOutlet weak var logFilterSwitch: UISwitch!
   @IBOutlet weak var deviceIdLabel: UILabel!
   @IBOutlet weak var storageMaxSizeField: UITextField!
@@ -35,8 +37,6 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
   @IBOutlet weak var setLogUrlButton: UIButton!
   @IBOutlet weak var setAppSecretButton: UIButton!
   @IBOutlet weak var overrideCountryCodeButton: UIButton!
-  @IBOutlet weak var authInfoCell: UITableViewCell!
-  @IBOutlet weak var authInfoLabel: UILabel!
   @IBOutlet weak var userId: UILabel!
   @IBOutlet weak var setUserIdButton: UIButton!
   
@@ -44,10 +44,9 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
   private var startupModePicker: MSEnumPicker<StartupMode>?
   private var eventFilterStarted = false
   private var dbFileDescriptor: CInt = 0
-  private var dbFileSource: DispatchSourceProtocol?  
+  private var dbFileSource: DispatchSourceProtocol?
+
   let startUpModeForCurrentSession: NSInteger = (UserDefaults.standard.object(forKey: kMSStartTargetKey) ?? 0) as! NSInteger
-  var userInformation: MSUserInformation?
-  var userDefaultStatus: Bool = true
   
   deinit {
     self.dbFileSource?.cancel()
@@ -78,6 +77,12 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     if (StartupMode.allValues[startupMode] != .Skip && StartupMode.allValues[startupMode] != .None) {
         _ = MSTransmissionTargets.shared
     }
+    
+    if let msaUserId = UserDefaults.standard.string(forKey: kMSATokenKey),
+        let refreshToken = UserDefaults.standard.string(forKey: kMSARefreshTokenKey) {
+        let provider = AnalyticsAuthenticationProvider(authenticationType: .msaCompact, ticketKey: msaUserId, delegate: MSAAnalyticsAuthenticationProvider.getInstance(refreshToken, self))
+        AnalyticsTransmissionTarget.addAuthenticationProvider(authenticationProvider:provider)
+    }
 
     // Storage size section.
     let storageMaxSize = UserDefaults.standard.object(forKey: kMSStorageMaxSizeKey) as? Int ?? kMSDefaultDatabaseSize
@@ -85,8 +90,13 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     self.storageMaxSizeField.text = "\(storageMaxSize / 1024)"
     self.storageMaxSizeField.addTarget(self, action: #selector(storageMaxSizeUpdated(_:)), for: .editingChanged)
     self.storageMaxSizeField.inputAccessoryView = self.toolBarForKeyboard()
+    
     if let supportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
-      let dbFile = supportDirectory.appendingPathComponent("com.microsoft.appcenter").appendingPathComponent("Logs.sqlite")
+#if !targetEnvironment(macCatalyst)
+      let dbFile = supportDirectory.appendingPathComponent(kMSAppCenterBundleIdentifier).appendingPathComponent("Logs.sqlite")
+#else
+      let dbFile = supportDirectory.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent(kMSAppCenterBundleIdentifier).appendingPathComponent("Logs.sqlite")
+#endif
       func getFileSize(_ file: URL) -> Int {
         return (try? file.resourceValues(forKeys:[.fileSizeKey]))?.fileSize ?? 0
       }
@@ -124,42 +134,11 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     updateViewState()
   }
 
-  @IBAction func authSignIn(_ sender: UIButton) {
-    appCenter.signIn { (userInformation, error) in
-      self.userDefaultStatus = false
-      self.userInformation = userInformation
-      DispatchQueue.main.async {
-        self.updateViewState()
-      }
-    }
-  }
-
-  @IBAction func authSignOut(_ sender: UIButton) {
-    appCenter.signOut()
-    self.userDefaultStatus = false
-    self.userInformation = nil
-    updateViewState()
-  }
-  
   func updateViewState() {
     self.appCenterEnabledSwitch.isOn = appCenter.isAppCenterEnabled()
-    self.pushEnabledSwitch.isOn = appCenter.isPushEnabled()
-    self.authSwitch.isOn = appCenter.isAuthEnabled()
-    if (self.userDefaultStatus) {
-      authInfoCell.isUserInteractionEnabled = false
-      authInfoLabel.text = "Authentication status unknown"
-      authInfoLabel.isEnabled = false
-    } else if (self.userInformation == nil) {
-      authInfoCell.isUserInteractionEnabled = false
-      authInfoLabel.text = "User is not authenticated"
-      authInfoLabel.isEnabled = false
-    } else {
-      authInfoCell.isUserInteractionEnabled = true
-      authInfoLabel.text = "User is authenticated"
-      authInfoLabel.isEnabled = true
-    }
+
     #if ACTIVE_COMPILATION_CONDITION_PUPPET
-    self.logFilterSwitch.isOn = MSEventFilter.isEnabled()
+    self.logFilterSwitch.isOn = MSEventFilter.enabled
     #else
     self.logFilterSwitch.isOn = false
     let cell = self.logFilterSwitch.superview!.superview as! UITableViewCell
@@ -172,16 +151,6 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     appCenter.setAppCenterEnabled(sender.isOn)
     updateViewState()
   }
-
-  @IBAction func authSwitchStateUpdated(_ sender: UISwitch){
-    appCenter.setAuthEnabled(sender.isOn)
-    updateViewState()
-  }
-  
-  @IBAction func pushSwitchStateUpdated(_ sender: UISwitch) {
-    appCenter.setPushEnabled(sender.isOn)
-    updateViewState()
-  }
     
   @IBAction func overrideCountryCode(_ sender: UIButton) {
     let appDelegate: AppDelegate? = UIApplication.shared.delegate as? AppDelegate
@@ -191,10 +160,10 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
   @IBAction func logFilterSwitchChanged(_ sender: UISwitch) {
     #if ACTIVE_COMPILATION_CONDITION_PUPPET
     if !eventFilterStarted {
-      MSAppCenter.startService(MSEventFilter.self)
+      AppCenter.startService(MSEventFilter.self)
       eventFilterStarted = true
     }
-    MSEventFilter.setEnabled(sender.isOn)
+    MSEventFilter.enabled = sender.isOn
     updateViewState()
     #endif
   }
@@ -260,18 +229,6 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     alertController.addTextField { (appSecretTextField) in
       appSecretTextField.text = UserDefaults.standard.string(forKey: kMSAppSecret) ?? self.appCenter.appSecret()
     }
-    let aadAction = UIAlertAction(title:"AAD Secret", style: .default, handler: {
-      (_ action : UIAlertAction) -> Void in
-      let text = self.appCenter.appSecretAAD();
-      UserDefaults.standard.set(text, forKey: kMSAppSecret)
-      self.appSecret.text = text
-    })
-    let b2cAction = UIAlertAction(title:"B2C Secret", style: .default, handler: {
-      (_ action : UIAlertAction) -> Void in
-      let text = self.appCenter.appSecretB2C();
-      UserDefaults.standard.set(text, forKey: kMSAppSecret)
-      self.appSecret.text = text
-    })
     let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
     let saveAction = UIAlertAction(title: "Save", style: .default, handler: {
       (_ action : UIAlertAction) -> Void in
@@ -286,8 +243,6 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     })
     alertController.addAction(cancelAction)
     alertController.addAction(saveAction)
-    alertController.addAction(aadAction)
-    alertController.addAction(b2cAction)
     alertController.addAction(resetAction)
     self.present(alertController, animated: true, completion: nil)
   }
@@ -340,8 +295,14 @@ class MSMainViewController: UITableViewController, AppCenterProtocol {
     if let destination = segue.destination as? AppCenterProtocol {
       destination.appCenter = appCenter
     }
-    if let destination = segue.destination as? MSAuthInfoViewController {
-      destination.userInformation = self.userInformation
+  }
+  
+  func showAlert(message : String) {
+    let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+    self.present(alert, animated: true)
+    let duration: Double = 2
+    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + duration) {
+        alert.dismiss(animated: true)
     }
   }
 }

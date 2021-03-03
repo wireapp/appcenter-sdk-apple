@@ -1,6 +1,161 @@
 # App Center SDK for iOS, macOS and tvOS Change Log
 
-## Version 2.5.4 (Under development)
+## Version 4.1.1 (Under development)
+
+### App Center
+
+* **[Improvement]** Use ASWebAuthenticationSession for authentication on iOS 12 or later.
+* **[Fix]** Fix Objective-C properties attributes warnings in MRC projects.
+
+### App Center Distribute
+
+* **[Fix]** Fix `kMSACUpdateTokenRequestIdKey` never gets removed.
+
+___
+
+## Version 4.1.0
+
+### App Center
+
+* **[Fix]** Fix `double-quoted` warnings in Xcode 12.
+* **[Fix]** Fix a crash when SQLite returns zero for `page_size`.
+* **[Feature]** Use XCFramework format for the binary distribution via CocoaPods. CocoaPods version 1.10+ is a requirement now.
+
+### App Center Crashes
+
+* **[Fix]** Fix nullability for attachments methods in crashes delegate. `nil` is valid return value now (4.0.0 regression).
+
+### App Center Distribute
+
+* **[Feature]** Add `distributeNoReleaseAvailable` callback to Distribute delegate.
+* **[Feature]** Add `distributeWillExitApp` callback to Distribute delegate.
+* **[Feature]** Add the Distribute module to Swift Package Manager. Please note that due to additional resources bundle, it requires Swift 5.3 (Xcode 12 and higher).
+
+___
+
+## Version 4.0.0
+
+### App Center
+
+* **[Feature]** Add support for Apple Silicon to existing macOS modules (`arm64` simulators for iOS and tvOS are not supported via CocoaPods).
+* **[Feature]** **[Breaking change]** Make SDK API more Swift-friendly. You can find the API updates in the [swift migration table](https://docs.microsoft.com/appcenter/sdk/getting-started/migration/apple-sdk-update#swift-api-changes).
+* **[Breaking change]** The App Center prefix `MS` in Objective-C is consolidated to `MSAC` for collision prevention. Please follow the [migration guide](https://docs.microsoft.com/appcenter/sdk/getting-started/migration/apple-sdk-update) for adopting the new naming.
+* **[Fix]** Fix `NSInvalidArgumentException` when using non-string object as a key in `NSUserDefaults`.
+* **[Fix]** Fix `NSDateFormatter` initialization in a concurrent environment.
+
+### App Center Crashes
+
+* **[Improvement]** Update PLCrashReporter to 1.8.0.
+
+### App Center Push
+
+App Center Push has been removed from the SDK and will be [retired on December 31st, 2020](https://devblogs.microsoft.com/appcenter/migrating-off-app-center-push/). 
+As an alternative to App Center Push, we recommend you migrate to [Azure Notification Hubs](https://docs.microsoft.com/en-us/azure/notification-hubs/notification-hubs-push-notification-overview) by following the [Push Migration Guide](https://docs.microsoft.com/en-us/appcenter/migration/push/).
+
+___
+
+## Version 3.3.4
+
+### App Center Distribute
+
+* **[Fix]** Fix manually checking for updates before `applicationDidBecomeActive` event.
+
+___
+
+## Version 3.3.3
+
+### App Center
+
+* **[Fix]** Fix compatibility with Xcode 12 beta when integrating SDK from sources.
+
+### App Center Analytics
+
+* **[Fix]** Fix processing logs (e.g., events) emitted from the `applicationWillTerminate` application delegate method.
+
+### App Center Crashes
+
+* **[Improvement]** Update PLCrashReporter to 1.7.2.
+
+___
+
+## Version 3.3.2
+
+### App Center Distribute
+
+* **[Fix]** Obfuscate app secret value that appears as URI part in verbose logs when getting release updates info.
+
+___
+
+## Version 3.3.1
+
+### App Center Crashes
+
+* **[Fix]** Update PLCrashReporter to 1.7.1 that fixes a crash on old operating systems (macOS <=10.11.x and iOS 9.x).
+* **[Fix]** Fix reporting stacktraces on iOS and tvOS simulators.
+
+___
+
+## Version 3.3.0
+
+Add support for Mac Catalyst to App Center Analytics and App Center Crashes. Also, this version has a breaking change - it drops Xcode 10 support, Xcode 11 is a minimal supported version now.
+
+### App Center
+
+* **[Feature]** Add support for Mac Catalyst.
+* **[Fix]** Fix `Undefined symbol: ___llvm_profile_runtime` when the SDK was built from source by Carthage.
+* **[Fix]** Fix building tvOS frameworks from source by Carthage.
+* **[Fix]** Fix screen resolution detection on macOS.
+* **[Fix]** Fix crash when local binary data (where unsent logs or unprocessed crashed are stored) is corrupted.
+* **[Fix]** When carrier name is retrieved incorrectly by iOS, show `nil` as expected instead of "carrier" string.
+
+### App Center Analytics
+
+* **[Feature]** Add support for Mac Catalyst.
+
+### App Center Crashes
+
+* **[Feature]** Add support for Mac Catalyst.
+* **[Improvement]** Update PLCrashReporter to 1.7.0.
+
+## Known issues
+
+* Crashes module doesn't work on old operating systems: macOS <=10.11.x and iOS 9.x
+
+___
+
+## Version 3.2.0
+
+### App Center
+
+* **[Feature]** Add support for XCFrameworks.
+* **[Improvement]** Use namespaced `NSUserDefaults` keys with the **MSAppCenter** prefix for all the keys set by the SDK. Fixed a few keys missing namespace.
+* **[Feature]** Swift Package Manager support for Analytics and Crashes modules.
+
+### App Center Crashes
+
+* **[Improvement]** Update PLCrashReporter to 1.6.0.
+
+___
+
+## Version 3.1.1
+
+### App Center Crashes
+
+* **[Improvement]** Update PLCrashReporter to 1.5.1.
+* **[Fix]** Remove the multiple attachments warning as that is now supported by the portal.
+
+___
+
+## Version 3.1.0
+
+### App Center Distribute
+
+* **[Feature]** Add a `disableAutomaticCheckForUpdate` API that needs to be called before SDK start in order to turn off automatic check for update. 
+* **[Feature]** Add a `checkForUpdate` API to manually check for update.
+
+___
+
+## Version 3.0.0
 
 ### App Center
 
@@ -8,9 +163,27 @@
 * **[Fix]** Disable module debugging for release mode in the SDK to fix dSYM warnings.
 * **[Fix]** Fix SDK crash at application launch on iOS 12.0 (`CTTelephonyNetworkInfo.serviceSubscriberCellularProviders` issue).
 * **[Fix]** The SDK was considering 201-299 status code as HTTP errors and is now fixed to accept all 2XX codes as successful.
+* **[Fix]** Fix macOS SDK binaries not to contain strong copies for symbolic links.
+* **[Improvement]** Replaced sqlite query concatenation with more secure bindings.
+
+### App Center Auth
+
+App Center Auth is [retired](https://aka.ms/MBaaS-retirement-blog-post) and has been removed from the SDK.
+
+### App Center Crashes
+
+* **[Fix]** Fix an issue to call Crashes delegate callbacks even though a modal window is being shown on macOS apps.
+* **[Fix]** Fix an issue when React Native SDK did not send wrapperSdk information.
+* **[Improvement]** Update PLCrashReporter to 1.4.0.
+
+### App Center Data
+
+App Center Data is [retired](https://aka.ms/MBaaS-retirement-blog-post) and has been removed from the SDK.
 
 ### App Center Distribute
 
+* **[Feature]** Add `updateTrack` property to be able to explicitly set either `MSUpdateTrackPrivate` or `MSUpdateTrackPublic` update track. By default, a public distribution group is used. **Breaking change**: To allow users to access releases of private groups you now need to migrate your application to call `MSDistribute.updateTrack = MSUpdateTrackPrivate` before the SDK start. Please read the documentation for more details.
+* **[Behavior change]** The public distribution is simplified to provide only one public group. If you have existing public groups defined for your application your users will receive the latest version of all public groups.
 * **[Fix]** Fix a crash when `SFAuthenticationSession` accesses the controller which is in the process of being released.
 * **[Fix]** Fix sign-in when switching to third-party apps while activating updates.
 

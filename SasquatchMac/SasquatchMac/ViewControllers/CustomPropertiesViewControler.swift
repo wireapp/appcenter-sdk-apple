@@ -17,19 +17,19 @@ class CustomPropertiesViewControler: NSViewController, NSTableViewDelegate {
   }
   
   class CustomProperty : NSObject {
-    var key: String = ""
-    var type: String = CustomPropertyType.Clear.rawValue
-    var string: String = ""
-    var number: NSNumber = 0
-    var boolean: Bool = false
-    var dateTime: Date = Date.init()
+    @objc var key: String = ""
+    @objc var type: String = CustomPropertyType.Clear.rawValue
+    @objc var string: String = ""
+    @objc var number: NSNumber = 0
+    @objc var boolean: Bool = false
+    @objc var dateTime: Date = Date.init()
   }
   
   var appCenter: AppCenterDelegate = AppCenterProvider.shared().appCenter!
   
   @IBOutlet var arrayController: NSArrayController!
   @IBOutlet weak var tableView: NSTableView!
-  dynamic var properties = [CustomProperty]()
+  @objc dynamic var properties = [CustomProperty]()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -50,7 +50,7 @@ class CustomPropertiesViewControler: NSViewController, NSTableViewDelegate {
   }
   
   @IBAction func send(_ sender: Any) {
-    let customProperties = MSCustomProperties()
+    let customProperties = CustomProperties()
     for property in properties {
       let key = property.key
       guard let type = CustomPropertyType(rawValue: property.type) else {
@@ -60,13 +60,13 @@ class CustomPropertiesViewControler: NSViewController, NSTableViewDelegate {
       case .Clear:
         customProperties.clearProperty(forKey: key)
       case .String:
-        customProperties.setString(property.string, forKey: key)
+        customProperties.set(property.string, forKey: key)
       case .Number:
-        customProperties.setNumber(property.number, forKey: key)
+        customProperties.set(property.number, forKey: key)
       case .Boolean:
-        customProperties.setBool(property.boolean, forKey: key)
+        customProperties.set(property.boolean, forKey: key)
       case .DateTime:
-        customProperties.setDate(property.dateTime, forKey: key)
+        customProperties.set(property.dateTime, forKey: key)
       }
     }
     appCenter.setCustomProperties(customProperties)
@@ -76,8 +76,8 @@ class CustomPropertiesViewControler: NSViewController, NSTableViewDelegate {
     guard let identifier = tableColumn?.identifier else {
       return nil
     }
-    let view = tableView.make(withIdentifier: identifier, owner: self)
-    if (identifier == "value") {
+    let view = tableView.makeView(withIdentifier: identifier, owner: self)
+    if (identifier.rawValue == "value") {
       updateValue(property: properties[row], cell: view as! NSTableCellView)
     }
     return view
@@ -90,7 +90,7 @@ class CustomPropertiesViewControler: NSViewController, NSTableViewDelegate {
     guard let row = properties.index(of: property) else {
       return
     }
-    let column = tableView.column(withIdentifier: "value")
+    let column = tableView.column(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "value"))
     guard let cell = tableView.view(atColumn: column, row: row, makeIfNecessary: false) as? NSTableCellView else {
       return
     }

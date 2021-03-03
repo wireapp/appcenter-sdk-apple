@@ -3,17 +3,17 @@
 
 import Cocoa
 
-// FIXME: trackPage has been hidden in MSAnalytics temporarily. Use internal until the feature comes back.
+// FIXME: trackPage has been hidden in Analytics temporarily. Use internal until the feature comes back.
 class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTableViewDelegate {
 
   class EventProperty : NSObject {
-    var key: String = ""
-    var type: String = EventPropertyType.string.rawValue
-    var string: String = ""
-    var double: NSNumber = 0
-    var long: NSNumber = 0
-    var boolean: Bool = false
-    var dateTime: Date = Date.init()
+    @objc var key: String = ""
+    @objc var type: String = EventPropertyType.string.rawValue
+    @objc var string: String = ""
+    @objc var double: NSNumber = 0
+    @objc var long: NSNumber = 0
+    @objc var boolean: Bool = false
+    @objc var dateTime: Date = Date.init()
   }
 
   enum EventPropertyType : String {
@@ -32,14 +32,14 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
     case critical = "Critical"
     case invalid = "Invalid"
 
-    var flags: MSFlags {
+    var flags: Flags {
       switch self {
       case .normal:
         return [.normal]
       case .critical:
         return [.critical]
       case .invalid:
-        return MSFlags.init(rawValue: 42)
+        return Flags.init(rawValue: 42)
       default:
         return []
       }
@@ -63,17 +63,17 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
   private var textBeforeEditing : String = ""
   private var totalPropsCounter : Int = 0
   private var priority = Priority.defaultType
-  dynamic var eventProperties = [EventProperty]()
+  @objc dynamic var eventProperties = [EventProperty]()
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    setEnabledButton?.state = appCenter.isAnalyticsEnabled() ? 1 : 0
+    setEnabledButton?.state = appCenter.isAnalyticsEnabled() ? .on : .off
     table?.delegate = self
     self.countLabel.stringValue = "Count: \(Int(countSlider.intValue))"
   }
 
   override func viewWillAppear() {
-    setEnabledButton?.state = appCenter.isAnalyticsEnabled() ? 1 : 0;
+    setEnabledButton?.state = appCenter.isAnalyticsEnabled() ? .on : .off
   }
 
   override func viewDidDisappear() {
@@ -85,7 +85,7 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
     let eventProperties = eventPropertiesSet()
     let eventName = name.stringValue
     for _ in 0..<Int(countSlider.intValue) {
-      if let properties = eventProperties as? MSEventProperties {
+      if let properties = eventProperties as? EventProperties {
         if priority != .defaultType {
           appCenter.trackEvent(eventName, withTypedProperties: properties, flags: priority.flags)
         } else {
@@ -107,7 +107,7 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
       for targetToken in TransmissionTargets.shared.transmissionTargets.keys {
         if TransmissionTargets.shared.targetShouldSendAnalyticsEvents(targetToken: targetToken) {
           let target = TransmissionTargets.shared.transmissionTargets[targetToken]!
-          if let properties = eventProperties as? MSEventProperties {
+          if let properties = eventProperties as? EventProperties {
             if priority != .defaultType {
               target.trackEvent(eventName, withProperties: properties, flags: priority.flags)
             } else {
@@ -169,16 +169,16 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
   }
 
   @IBAction func setEnabled(sender : NSButton) {
-    appCenter.setAnalyticsEnabled(sender.state == 1)
-    sender.state = appCenter.isAnalyticsEnabled() ? 1 : 0
+    appCenter.setAnalyticsEnabled(sender.state == .on)
+    sender.state = appCenter.isAnalyticsEnabled() ? .on : .off
   }
   
   func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
     guard let identifier = tableColumn?.identifier else {
       return nil
     }
-    let view = tableView.make(withIdentifier: identifier, owner: self)
-    if (identifier == "value") {
+    let view = tableView.makeView(withIdentifier: identifier, owner: self)
+    if (identifier.rawValue == "value") {
       updateValue(property: eventProperties[row], cell: view as! NSTableCellView)
     }
     return view
@@ -191,7 +191,7 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
     guard let row = eventProperties.index(of: property) else {
       return
     }
-    let column = table?.column(withIdentifier: "value")
+    let column = table?.column(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "value"))
     guard let cell = table?.view(atColumn: column!, row: row, makeIfNecessary: false) as? NSTableCellView else {
       return
     }
@@ -219,7 +219,7 @@ class AnalyticsViewController : NSViewController, NSTableViewDataSource, NSTable
     }
     var onlyStrings = true
     var propertyDictionary = [String: String]()
-    let properties = MSEventProperties()
+    let properties = EventProperties()
     for property in eventProperties {
       let key = property.key
       guard let type = EventPropertyType(rawValue: property.type) else {

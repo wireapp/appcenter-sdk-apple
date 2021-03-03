@@ -44,12 +44,6 @@ class AppCenterUITests: XCTestCase {
     appCenterButton.tap()
 
     // All services should be disabled.
-    // Push.
-    XCTAssertFalse(app.tables["App Center"].switches["Push Enabled"].boolValue)
-    
-    // Auth.
-    XCTAssertFalse(app.tables["App Center"].switches["Auth Enabled"].boolValue)
-    
     // Analytics.
     app.tabBars.buttons["Analytics"].tap()
     XCTAssertFalse(app.tables["Analytics"].switches["Set Enabled"].boolValue)
@@ -67,12 +61,6 @@ class AppCenterUITests: XCTestCase {
     appCenterButton.tap()
 
     // All services should be enabled.
-    // Push.
-    XCTAssertTrue(app.tables["App Center"].switches["Push Enabled"].boolValue)
-    
-    // Auth.
-    XCTAssertTrue(app.tables["App Center"].switches["Auth Enabled"].boolValue)
-    
     // Analytics.
     app.tabBars.buttons["Analytics"].tap()
     XCTAssertTrue(app.tables["Analytics"].switches["Set Enabled"].boolValue)

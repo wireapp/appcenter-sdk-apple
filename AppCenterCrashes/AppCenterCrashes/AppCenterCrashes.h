@@ -3,9 +3,18 @@
 
 #import <Foundation/Foundation.h>
 
-#import "MSCrashHandlerSetupDelegate.h"
-#import "MSCrashes.h"
-#import "MSCrashesDelegate.h"
-#import "MSErrorAttachmentLog+Utility.h"
-#import "MSErrorAttachmentLog.h"
-#import "MSWrapperCrashesHelper.h"
+#if __has_include(<AppCenterCrashes/MSACCrashes.h>)
+#import <AppCenterCrashes/MSACCrashHandlerSetupDelegate.h>
+#import <AppCenterCrashes/MSACCrashes.h>
+#import <AppCenterCrashes/MSACCrashesDelegate.h>
+#import <AppCenterCrashes/MSACErrorAttachmentLog+Utility.h>
+#import <AppCenterCrashes/MSACErrorAttachmentLog.h>
+#import <AppCenterCrashes/MSACWrapperCrashesHelper.h>
+#else
+#import "MSACCrashHandlerSetupDelegate.h"
+#import "MSACCrashes.h"
+#import "MSACCrashesDelegate.h"
+#import "MSACErrorAttachmentLog+Utility.h"
+#import "MSACErrorAttachmentLog.h"
+#import "MSACWrapperCrashesHelper.h"
+#endif
