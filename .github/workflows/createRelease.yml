@@ -21,9 +21,9 @@ jobs:
         run: |
           bash <(curl --silent https://raw.githubusercontent.com/billypchan/iosGitHubTools/master/scripts/checkoutReleaseTag.sh) ${{ env.UPSTREAM_REPO }}
 
-      - name: make framwwork
+      - name: make framework
         env:
-          DEVELOPER_DIR: /Applications/Xcode_11.4.1.app/Contents/Developer
+          DEVELOPER_DIR: /Applications/Xcode_12.4.app/Contents/Developer
         run: |
           bash <(curl --silent https://raw.githubusercontent.com/billypchan/iosGitHubTools/master/scripts/createCarthageFramwork.sh)
 
