@@ -1,4 +1,4 @@
-name: create release from upstream latest relase tag v0.1
+name: create release from upstream latest relase tag v0.1.1
 
 on:
   workflow_dispatch:
